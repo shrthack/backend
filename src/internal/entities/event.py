@@ -1,7 +1,7 @@
 import pydantic
 import uuid
 
-from db.event import UpdateEventParams
+from db.event import CreateEventParams, UpdateEventParams
 
 
 class CreateEvent(pydantic.BaseModel):
@@ -9,14 +9,16 @@ class CreateEvent(pydantic.BaseModel):
     info: str
     image_url: str
     points: int
+    stand_id: uuid.UUID | None
 
     def to_params(self):
-        return {
-            "name": self.name,
-            "info": self.info,
-            "image_url": self.image_url,
-            "points": self.points,
-        }
+        return CreateEventParams(
+            name=self.name,
+            info=self.info,
+            image_url=self.image_url,
+            points=self.points,
+            stand_id=self.stand_id,
+        )
 
 
 class UpdateEvent(pydantic.BaseModel):
@@ -24,6 +26,7 @@ class UpdateEvent(pydantic.BaseModel):
     info: str | None
     image_url: str | None
     points: int | None
+    stand_id: uuid.UUID | None
 
     def to_params(self, id: uuid.UUID) -> UpdateEventParams:
         return UpdateEventParams(
@@ -32,6 +35,7 @@ class UpdateEvent(pydantic.BaseModel):
             info=self.info,
             image_url=self.image_url,
             points=self.points,
+            stand_id=self.stand_id,
         )
 
 
@@ -41,6 +45,7 @@ class Event(pydantic.BaseModel):
     info: str
     image_url: str
     points: int
+    stand_id: uuid.UUID | None
 
 
 class CreateActiveEvent(pydantic.BaseModel):
@@ -74,3 +79,4 @@ class ActiveEvent(pydantic.BaseModel):
 
 class Error(pydantic.BaseModel):
     detail: str
+

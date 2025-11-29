@@ -1,6 +1,6 @@
 -- name: CreateEvent :one
-insert into event (name, info, image_url, points)
-values ($1, $2, $3, $4)
+insert into event (name, info, image_url, points, stand_id)
+values ($1, $2, $3, $4, $5)
 returning *;
 
 -- name: GetEventByID :one
@@ -16,7 +16,8 @@ set
     name = coalesce(sqlc.narg('name'), name),
     info = coalesce(sqlc.narg('info'), info),
     image_url = coalesce(sqlc.narg('image_url'), image_url),
-    points = coalesce(sqlc.narg('points'), points)
+    points = coalesce(sqlc.narg('points'), points),
+    stand_id = coalesce(sqlc.narg('stand_id'), stand_id)
 where
     id = $1
 returning *;
