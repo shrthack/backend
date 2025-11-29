@@ -1,5 +1,7 @@
 # Shorthack Backend
- 
+
+[![Coverage Status](https://coveralls.io/repos/github/shrthack/backend/badge.svg?branch=main)](https://coveralls.io/github/shrthack/backend?branch=main)
+
 Some docs for dev and deploy
 
 ## Installation

@@ -5,9 +5,12 @@
 - **Run**: `poetry run python src/main.py`
 - **Generate DB code**: `sqlc generate`
 - **Docker run**: `docker-compose up`
-- **Single test**: No test framework configured yet
-- **Lint**: No linter configured yet
-- **Format**: No formatter configured yet
+- **Test all**: `poetry run pytest`
+- **Single test**: `poetry run pytest tests/test_file.py::TestClass::test_method`
+- **Test coverage**: `poetry run pytest --cov=src --cov-report=html`
+- **Lint**: `poetry run ruff check src/`
+- **Format**: `poetry run ruff format src/`
+- **Type check**: `poetry run mypy src/`
 
 ## Code Style & Best Practices
 
@@ -158,4 +161,81 @@ returning *;
 - **Entity methods**: Pure functions for conversion/validation
 - **Infra functions**: Stateless utilities
 
-**Always follow these patterns exactly - agents must mimic the existing codebase style precisely.**</content>
+**Always follow these patterns exactly - agents must mimic the existing codebase style precisely.**
+
+## Testing Best Practices
+
+### Test Framework
+- **Framework**: Use pytest for all tests
+- **Structure**: Place tests in `tests/` directory mirroring `src/` structure
+- **Naming**: `test_*.py` files with `test_*` functions
+- **Coverage**: Aim for >80% coverage, use `pytest-cov` for reports
+
+### Test Organization
+- **Unit tests**: Test individual functions/classes in isolation
+- **Integration tests**: Test API endpoints with test database
+- **Fixtures**: Use pytest fixtures for common test data (clients, sessions)
+- **Mocking**: Use `pytest-mock` for external dependencies
+
+### Coverage & Quality
+- **Coveralls**: Upload coverage reports to Coveralls.io
+- **CI Integration**: Fail builds below coverage threshold
+- **Branch coverage**: Enable branch coverage for conditionals
+- **Exclusions**: Exclude test files, migrations, and config from coverage
+
+### Test Database
+- **Isolation**: Use separate test database with migrations
+- **Cleanup**: Truncate tables between tests or use transactions
+- **Async**: Use async test clients for FastAPI endpoints
+- **Factories**: Create test data factories for consistent test setup
+
+**Good test example:**
+```python
+@pytest.mark.asyncio
+async def test_create_client_success(client: AsyncClient, db_session: AsyncSession):
+    # Arrange
+    data = {"name": "John", "email": "john@example.com"}
+
+    # Act
+    response = await client.post("/clients", json=data)
+
+    # Assert
+    assert response.status_code == 201
+    assert response.json()["name"] == "John"
+```
+
+## CI/CD Pipelines
+
+### Testing Pipeline
+- **Trigger**: Run on PRs and pushes to main
+- **Steps**: Install deps → Run linter → Run type checker → Run tests → Upload coverage
+- **Coverage**: Upload to Coveralls with minimum threshold
+- **Parallel**: Run tests in parallel for faster feedback
+
+### Deployment Pipeline
+- **Trigger**: On merge to main after tests pass
+- **Environment**: Use self-hosted runners for deployment
+- **Steps**: Pull latest → Build containers → Deploy services
+- **Rollback**: Keep previous version running during deployment
+
+## Docker for Testing
+
+### Test Dockerfile
+```dockerfile
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN pip install --upgrade pip && pip install poetry
+
+WORKDIR /usr/src/app
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-root --no-interaction
+
+COPY . .
+
+# Run tests
+CMD ["poetry", "run", "pytest", "--cov=src", "--cov-report=xml"]
+```</content>
