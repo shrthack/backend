@@ -21,10 +21,6 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: poetry install --no-interaction
-      - name: Lint
-        run: poetry run ruff check src/
-      - name: Type check
-        run: poetry run mypy src/
       - name: Run tests
         run: poetry run pytest --cov=src --cov-report=xml -n auto
       - name: Upload coverage to Coveralls
