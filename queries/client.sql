@@ -22,7 +22,7 @@ where
     id = $1
 returning *;
 
--- name: DeleteClient :exec
+-- name: DeleteClient :one
 delete from client
 where id = $1
 returning id;

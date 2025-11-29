@@ -42,6 +42,4 @@ async def update(
 async def delete(conn: AsyncSession, id: uuid.UUID) -> bool:
     async with conn.begin():
         q = c.AsyncQuerier(await conn.connection())
-        if await q.delete_client(id=id) is None:
-            return False
-        return True
+        return await q.delete_client(id=id) is not None

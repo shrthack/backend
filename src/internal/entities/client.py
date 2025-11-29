@@ -19,7 +19,7 @@ class CreateClient(pydantic.BaseModel):
     email: str
     password: str
     image_url: str
-    tg_username: str | None
+    tg_username: str = ""
 
     def to_params(self) -> CreateClientParams:
         return CreateClientParams(
