@@ -4,100 +4,96 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from ..infra.db import db_session
-from ..cases import event
-from ..entities.event import (
-    Event,
-    CreateEvent,
-    UpdateEvent,
+from ..cases import stand
+from ..entities.stand import (
+    Stand,
+    CreateStand,
+    UpdateStand,
     Error,
 )
 
-router = APIRouter(prefix="/events")
+router = APIRouter(prefix="/stands")
 
 
 @router.post("", responses={400: {"model": Error}})
-async def create_event(
-    body: CreateEvent,
+async def create_stand(
+    body: CreateStand,
     session: AsyncSession = Depends(db_session),
-) -> Event | None | Error:
+) -> Stand | None | Error:
     try:
-        dto = await event.create_event(session, body)
+        dto = await stand.create_stand(session, body)
         assert dto is not None
-        return Event(
+        return Stand(
             id=dto.id,
             name=dto.name,
             info=dto.info,
+            location=dto.location,
             image_url=dto.image_url,
-            points=dto.points,
-            stand_id=dto.stand_id,
         )
     except IntegrityError:
-        raise HTTPException(status_code=400, detail="Event creation failed")
+        raise HTTPException(status_code=400, detail="Stand creation failed")
 
 
-@router.get("", response_model=list[Event])
-async def get_all_events(
+@router.get("", response_model=list[Stand])
+async def get_all_stands(
     session: AsyncSession = Depends(db_session),
 ):
-    events = []
-    async for dto in event.get_all_events(session):
-        events.append(Event(
+    stands = []
+    async for dto in stand.get_all_stands(session):
+        stands.append(Stand(
             id=dto.id,
             name=dto.name,
             info=dto.info,
+            location=dto.location,
             image_url=dto.image_url,
-            points=dto.points,
-            stand_id=dto.stand_id,
         ))
-    return events
+    return stands
 
 
 @router.get("/{id}", responses={404: {"model": Error}})
-async def get_event(
+async def get_stand(
     id: uuid.UUID,
     session: AsyncSession = Depends(db_session),
-) -> Event | None:
+) -> Stand | None:
     try:
-        dto = await event.get_event(session, id)
+        dto = await stand.get_stand(session, id)
         if dto is None:
-            raise HTTPException(status_code=404, detail="Event not found")
-        return Event(
+            raise HTTPException(status_code=404, detail="Stand not found")
+        return Stand(
             id=dto.id,
             name=dto.name,
             info=dto.info,
+            location=dto.location,
             image_url=dto.image_url,
-            points=dto.points,
-            stand_id=dto.stand_id,
         )
     except NoResultFound:
-        raise HTTPException(status_code=404, detail="Event not found")
+        raise HTTPException(status_code=404, detail="Stand not found")
 
 
 @router.put("/{id}", responses={404: {"model": Error}})
-async def update_event(
+async def update_stand(
     id: uuid.UUID,
-    ent: UpdateEvent,
+    ent: UpdateStand,
     session: AsyncSession = Depends(db_session),
-) -> Event | None:
-    dto = await event.update_event(session, id, ent)
+) -> Stand | None:
+    dto = await stand.update_stand(session, id, ent)
     if dto is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return Event(
+        raise HTTPException(status_code=404, detail="Stand not found")
+    return Stand(
         id=dto.id,
         name=dto.name,
         info=dto.info,
+        location=dto.location,
         image_url=dto.image_url,
-        points=dto.points,
-        stand_id=dto.stand_id,
     )
 
 
 @router.delete("/{id}", responses={204: {}, 404: {"model": Error}})
-async def delete_event(
+async def delete_stand(
     id: uuid.UUID,
     session: AsyncSession = Depends(db_session),
 ) -> Response:
-    if await event.delete_event(session, id):
+    if await stand.delete_stand(session, id):
         return Response(status_code=204)
     else:
-        raise HTTPException(status_code=404, detail="Event not found")
+        raise HTTPException(status_code=404, detail="Stand not found")

@@ -11,7 +11,7 @@ from ..entities.event import (
 async def create_event(conn: AsyncSession, ent: CreateEvent) -> m.Event | None:
     async with conn.begin():
         q = e.AsyncQuerier(await conn.connection())
-        event = await q.create_event(**ent.to_params())
+        event = await q.create_event(ent.to_params())
         return event
 
 
@@ -43,4 +43,3 @@ async def delete_event(conn: AsyncSession, id: uuid.UUID) -> bool:
         q = e.AsyncQuerier(await conn.connection())
         await q.delete_event(id=id)
         return True
-

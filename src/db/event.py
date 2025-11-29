@@ -12,25 +12,19 @@ import sqlalchemy.ext.asyncio
 from db import models
 
 
-CREATE_ACTIVE_EVENT = """-- name: create_active_event \\:one
-insert into active_events (user_id, event_id, total_points)
-values (:p1, :p2, :p3)
-returning user_id, event_id, total_points
-"""
-
-
 CREATE_EVENT = """-- name: create_event \\:one
-insert into event (name, info, image_url, points)
-values (:p1, :p2, :p3, :p4)
-returning id, name, info, image_url, points
+insert into event (name, info, image_url, points, stand_id)
+values (:p1, :p2, :p3, :p4, :p5)
+returning id, name, info, image_url, points, stand_id
 """
 
 
-DELETE_ACTIVE_EVENT = """-- name: delete_active_event \\:exec
-delete from active_events
-where user_id = :p1
-returning user_id
-"""
+class CreateEventParams(pydantic.BaseModel):
+    name: str
+    info: str
+    image_url: str
+    points: int
+    stand_id: Optional[uuid.UUID]
 
 
 DELETE_EVENT = """-- name: delete_event \\:exec
@@ -40,35 +34,14 @@ returning id
 """
 
 
-GET_ACTIVE_EVENT_BY_USER_ID = """-- name: get_active_event_by_user_id \\:one
-select user_id, event_id, total_points from active_events
-where user_id = :p1
-"""
-
-
-GET_ACTIVE_EVENTS = """-- name: get_active_events \\:many
-select user_id, event_id, total_points from active_events
-"""
-
-
 GET_ALL_EVENTS = """-- name: get_all_events \\:many
-select id, name, info, image_url, points from event
+select id, name, info, image_url, points, stand_id from event
 """
 
 
 GET_EVENT_BY_ID = """-- name: get_event_by_id \\:one
-select id, name, info, image_url, points from event
+select id, name, info, image_url, points, stand_id from event
 where id = :p1
-"""
-
-
-UPDATE_ACTIVE_EVENT = """-- name: update_active_event \\:one
-update active_events
-set
-    total_points = coalesce(:p2, total_points)
-where
-    user_id = :p1
-returning user_id, event_id, total_points
 """
 
 
@@ -78,10 +51,11 @@ set
     name = coalesce(:p2, name),
     info = coalesce(:p3, info),
     image_url = coalesce(:p4, image_url),
-    points = coalesce(:p5, points)
+    points = coalesce(:p5, points),
+    stand_id = coalesce(:p6, stand_id)
 where
     id = :p1
-returning id, name, info, image_url, points
+returning id, name, info, image_url, points, stand_id
 """
 
 
@@ -91,28 +65,20 @@ class UpdateEventParams(pydantic.BaseModel):
     info: Optional[str]
     image_url: Optional[str]
     points: Optional[int]
+    stand_id: Optional[uuid.UUID]
 
 
 class Querier:
     def __init__(self, conn: sqlalchemy.engine.Connection):
         self._conn = conn
 
-    def create_active_event(self, *, user_id: uuid.UUID, event_id: uuid.UUID, total_points: int) -> Optional[models.ActiveEvent]:
-        row = self._conn.execute(sqlalchemy.text(CREATE_ACTIVE_EVENT), {"p1": user_id, "p2": event_id, "p3": total_points}).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
-        )
-
-    def create_event(self, *, name: str, info: str, image_url: str, points: int) -> Optional[models.Event]:
+    def create_event(self, arg: CreateEventParams) -> Optional[models.Event]:
         row = self._conn.execute(sqlalchemy.text(CREATE_EVENT), {
-            "p1": name,
-            "p2": info,
-            "p3": image_url,
-            "p4": points,
+            "p1": arg.name,
+            "p2": arg.info,
+            "p3": arg.image_url,
+            "p4": arg.points,
+            "p5": arg.stand_id,
         }).first()
         if row is None:
             return None
@@ -122,32 +88,11 @@ class Querier:
             info=row[2],
             image_url=row[3],
             points=row[4],
+            stand_id=row[5],
         )
-
-    def delete_active_event(self, *, user_id: uuid.UUID) -> None:
-        self._conn.execute(sqlalchemy.text(DELETE_ACTIVE_EVENT), {"p1": user_id})
 
     def delete_event(self, *, id: uuid.UUID) -> None:
         self._conn.execute(sqlalchemy.text(DELETE_EVENT), {"p1": id})
-
-    def get_active_event_by_user_id(self, *, user_id: uuid.UUID) -> Optional[models.ActiveEvent]:
-        row = self._conn.execute(sqlalchemy.text(GET_ACTIVE_EVENT_BY_USER_ID), {"p1": user_id}).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
-        )
-
-    def get_active_events(self) -> Iterator[models.ActiveEvent]:
-        result = self._conn.execute(sqlalchemy.text(GET_ACTIVE_EVENTS))
-        for row in result:
-            yield models.ActiveEvent(
-                user_id=row[0],
-                event_id=row[1],
-                total_points=row[2],
-            )
 
     def get_all_events(self) -> Iterator[models.Event]:
         result = self._conn.execute(sqlalchemy.text(GET_ALL_EVENTS))
@@ -158,6 +103,7 @@ class Querier:
                 info=row[2],
                 image_url=row[3],
                 points=row[4],
+                stand_id=row[5],
             )
 
     def get_event_by_id(self, *, id: uuid.UUID) -> Optional[models.Event]:
@@ -170,16 +116,7 @@ class Querier:
             info=row[2],
             image_url=row[3],
             points=row[4],
-        )
-
-    def update_active_event(self, *, user_id: uuid.UUID, total_points: Optional[int]) -> Optional[models.ActiveEvent]:
-        row = self._conn.execute(sqlalchemy.text(UPDATE_ACTIVE_EVENT), {"p1": user_id, "p2": total_points}).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
+            stand_id=row[5],
         )
 
     def update_event(self, arg: UpdateEventParams) -> Optional[models.Event]:
@@ -189,6 +126,7 @@ class Querier:
             "p3": arg.info,
             "p4": arg.image_url,
             "p5": arg.points,
+            "p6": arg.stand_id,
         }).first()
         if row is None:
             return None
@@ -198,6 +136,7 @@ class Querier:
             info=row[2],
             image_url=row[3],
             points=row[4],
+            stand_id=row[5],
         )
 
 
@@ -205,22 +144,13 @@ class AsyncQuerier:
     def __init__(self, conn: sqlalchemy.ext.asyncio.AsyncConnection):
         self._conn = conn
 
-    async def create_active_event(self, *, user_id: uuid.UUID, event_id: uuid.UUID, total_points: int) -> Optional[models.ActiveEvent]:
-        row = (await self._conn.execute(sqlalchemy.text(CREATE_ACTIVE_EVENT), {"p1": user_id, "p2": event_id, "p3": total_points})).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
-        )
-
-    async def create_event(self, *, name: str, info: str, image_url: str, points: int) -> Optional[models.Event]:
+    async def create_event(self, arg: CreateEventParams) -> Optional[models.Event]:
         row = (await self._conn.execute(sqlalchemy.text(CREATE_EVENT), {
-            "p1": name,
-            "p2": info,
-            "p3": image_url,
-            "p4": points,
+            "p1": arg.name,
+            "p2": arg.info,
+            "p3": arg.image_url,
+            "p4": arg.points,
+            "p5": arg.stand_id,
         })).first()
         if row is None:
             return None
@@ -230,32 +160,11 @@ class AsyncQuerier:
             info=row[2],
             image_url=row[3],
             points=row[4],
+            stand_id=row[5],
         )
-
-    async def delete_active_event(self, *, user_id: uuid.UUID) -> None:
-        await self._conn.execute(sqlalchemy.text(DELETE_ACTIVE_EVENT), {"p1": user_id})
 
     async def delete_event(self, *, id: uuid.UUID) -> None:
         await self._conn.execute(sqlalchemy.text(DELETE_EVENT), {"p1": id})
-
-    async def get_active_event_by_user_id(self, *, user_id: uuid.UUID) -> Optional[models.ActiveEvent]:
-        row = (await self._conn.execute(sqlalchemy.text(GET_ACTIVE_EVENT_BY_USER_ID), {"p1": user_id})).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
-        )
-
-    async def get_active_events(self) -> AsyncIterator[models.ActiveEvent]:
-        result = await self._conn.stream(sqlalchemy.text(GET_ACTIVE_EVENTS))
-        async for row in result:
-            yield models.ActiveEvent(
-                user_id=row[0],
-                event_id=row[1],
-                total_points=row[2],
-            )
 
     async def get_all_events(self) -> AsyncIterator[models.Event]:
         result = await self._conn.stream(sqlalchemy.text(GET_ALL_EVENTS))
@@ -266,6 +175,7 @@ class AsyncQuerier:
                 info=row[2],
                 image_url=row[3],
                 points=row[4],
+                stand_id=row[5],
             )
 
     async def get_event_by_id(self, *, id: uuid.UUID) -> Optional[models.Event]:
@@ -278,16 +188,7 @@ class AsyncQuerier:
             info=row[2],
             image_url=row[3],
             points=row[4],
-        )
-
-    async def update_active_event(self, *, user_id: uuid.UUID, total_points: Optional[int]) -> Optional[models.ActiveEvent]:
-        row = (await self._conn.execute(sqlalchemy.text(UPDATE_ACTIVE_EVENT), {"p1": user_id, "p2": total_points})).first()
-        if row is None:
-            return None
-        return models.ActiveEvent(
-            user_id=row[0],
-            event_id=row[1],
-            total_points=row[2],
+            stand_id=row[5],
         )
 
     async def update_event(self, arg: UpdateEventParams) -> Optional[models.Event]:
@@ -297,6 +198,7 @@ class AsyncQuerier:
             "p3": arg.info,
             "p4": arg.image_url,
             "p5": arg.points,
+            "p6": arg.stand_id,
         })).first()
         if row is None:
             return None
@@ -306,4 +208,5 @@ class AsyncQuerier:
             info=row[2],
             image_url=row[3],
             points=row[4],
+            stand_id=row[5],
         )

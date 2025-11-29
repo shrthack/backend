@@ -2,6 +2,7 @@
 # versions:
 #   sqlc v1.28.0
 import pydantic
+from typing import Optional
 import uuid
 
 
@@ -27,6 +28,7 @@ class Event(pydantic.BaseModel):
     info: str
     image_url: str
     points: int
+    stand_id: Optional[uuid.UUID]
 
 
 class Merch(pydantic.BaseModel):
@@ -35,3 +37,11 @@ class Merch(pydantic.BaseModel):
     info: str
     image_url: str
     points_needed: int
+
+
+class Stand(pydantic.BaseModel):
+    id: uuid.UUID
+    name: str
+    info: str
+    location: str
+    image_url: str

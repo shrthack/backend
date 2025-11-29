@@ -5,11 +5,13 @@ from internal.config import settings
 from internal.handlers import other
 from internal.handlers import client
 from internal.handlers import event
+from internal.handlers import stand
 
 app = fastapi.FastAPI()
 app.include_router(other.router, tags=["Check"])
 app.include_router(client.router, tags=["Client"])
 app.include_router(event.router, tags=["Event"])
+app.include_router(stand.router, tags=["Stand"])
 
 
 def main():
