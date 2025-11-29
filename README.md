@@ -4,11 +4,6 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1+-green.svg)](https://fastapi.tiangolo.com/)
 
-
-## Swagger
-
-[Ссылка на доку с ручками](http://93.185.159.71/docs#/)
-
 ## Возможности
 
 - **Управление клиентами**: Регистрация пользователей, аутентификация и управление профилями
@@ -35,8 +30,8 @@
 
 Интерактивная документация API доступна через Swagger UI:
 
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs) (при локальном запуске)
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc) (при локальном запуске)
+- **Swagger UI**: [Ссылка](http://93.185.159.71/docs) 
+- **ReDoc**: [Ссылка](http://93.185.159.71/redoc) 
 
 ## Быстрый старт
 
