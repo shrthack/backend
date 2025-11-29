@@ -41,6 +41,11 @@ class Merch(pydantic.BaseModel):
     points_needed: int
 
 
+class Point(pydantic.BaseModel):
+    user_id: uuid.UUID
+    total_points: int
+
+
 class Stand(pydantic.BaseModel):
     id: uuid.UUID
     name: str
