@@ -1,40 +1,81 @@
 # Shorthack Backend
 
 [![Coverage Status](https://coveralls.io/repos/github/shrthack/backend/badge.svg?branch=main)](https://coveralls.io/github/shrthack/backend?branch=main)
+[![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1+-green.svg)](https://fastapi.tiangolo.com/)
 
-Some docs for dev and deploy
 
-## Installation
+## Swagger
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/shrthack/backend.git
-   cd backend
-   ```
+[Ссылка на доку с ручками](http://93.185.159.71/docs#/)
 
-2. Install dependencies using Poetry:
-   ```bash
-   poetry install
-   ```
+## Возможности
 
-## Development
+- **Управление клиентами**: Регистрация пользователей, аутентификация и управление профилями
+- **Координация мероприятий**: Создание и управление событиями хакатонов с детальным расписанием
+- **Система товаров**: Отслеживание и распределение товаров мероприятия
+- **Распределение стендов**: Управление назначением стендов и будок для участников
+- **Панель аналитики**: Комплексная аналитика мероприятий и insights
+- **Система баллов**: Функции геймификации с отслеживанием баллов и наградами
+- **Безопасная аутентификация**: Аутентификация на основе JWT с хэшированием паролей Argon2
 
-### Prerequisites
+## Стек
+
+- **Язык**: Python 3.13+
+- **Фреймворк**: FastAPI (высокопроизводительный асинхронный веб-API)
+- **База данных**: PostgreSQL с ORM SQLAlchemy
+- **Генерация кода**: sqlc (типобезопасные SQL-запросы)
+- **Аутентификация**: JWT-токены с HS256
+- **Хэширование паролей**: Argon2
+- **Управление зависимостями**: Poetry
+- **Контейнеризация**: Docker & Docker Compose
+- **Тестирование**: pytest с отчетами о покрытии
+
+## Документация API
+
+Интерактивная документация API доступна через Swagger UI:
+
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs) (при локальном запуске)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc) (при локальном запуске)
+
+## Быстрый старт
+
+### Предварительные требования
 
 - Python 3.13+
 - Poetry
-- Docker and Docker Compose
-- sqlc (for code generation from SQL)
+- Docker и Docker Compose
+- sqlc (для генерации кода базы данных)
 
-### Setup Development Environment
+API будет доступен по адресу `http://localhost:8000`.
 
-1. Follow the installation steps above.
+## Тестирование
 
-2. Install sqlc (if generating code from SQL queries):
-   - Download from [sqlc.dev](https://sqlc.dev/)
-   - Or use Docker: `docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate`
+Запустите полный набор тестов с покрытием:
 
-3. Generate database code (if needed):
-   ```bash
-   sqlc generate
-   ```
+```bash
+poetry run pytest --cov=src --cov-report=html
+```
+## Разработка
+
+### Миграции базы данных
+
+Добавляйте новые миграции в директорию `migrations/` в формате goose:
+
+```bash
+-- +goose Up
+CREATE TABLE example (...);
+-- +goose Down
+DROP TABLE example;
+```
+
+### Архитектура
+
+Кодовая база следует паттерну чистой архитектуры:
+
+- **Handlers**: Обработчики маршрутов FastAPI (HTTP-слой)
+- **Cases**: Бизнес-логика и варианты использования
+- **Entities**: Модели данных и валидация
+- **Infra**: Внешние интеграции (БД, JWT, хэширование)
+- **DB**: Запросы к базе данных и модели (генерируются sqlc)
+
