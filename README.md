@@ -15,25 +15,6 @@ Some docs for dev and deploy
    poetry install
    ```
 
-## Usage
-
-1. Start the database:
-   ```bash
-   docker-compose up -d postgres
-   ```
-
-2. Run database migrations:
-   ```bash
-   docker-compose up migrations
-   ```
-
-3. Run the application:
-   ```bash
-   poetry run python src/main.py
-   ```
-
-The API will be available at `http://localhost:8000`.
-
 ## Development
 
 ### Prerequisites
