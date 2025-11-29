@@ -1,0 +1,20 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types:
+      - closed
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull updates
+        run: git pull
+        working-directory: /home/gh-actor/project
+
+      - name: Up services
+        run: |
+          docker compose down -v && docker compose up --build -d
+        working-directory: /home/gh-actor/project
