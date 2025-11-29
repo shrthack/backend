@@ -4,12 +4,15 @@ import uvicorn
 from internal.config import settings
 from internal.handlers import other
 from internal.handlers import client
+
 from internal.handlers.merch import router as merch_router
+from internal.handlers import event
 
 app = fastapi.FastAPI()
 app.include_router(other.router, tags=["Check"])
 app.include_router(client.router, tags=["Client"])
 app.include_router(merch_router, tags=["Merch"])
+app.include_router(event.router, tags=["Event"])
 
 
 def main():
