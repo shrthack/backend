@@ -1,11 +1,9 @@
-from typing import Annotated
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from ..infra import jwt
-from internal.deps import security
 from ..infra.db import db_session
 from ..cases import client
 from ..entities.client import (
@@ -31,7 +29,7 @@ async def signup(
     try:
         dto = await client.create(session, body)
         assert dto is not None
-        return SignUpResp(token=jwt.generate(dto.id, SECRET))
+        return SignUpResp(id=dto.id)
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Client already exists")
 
@@ -44,16 +42,16 @@ async def signin(
     dto = await client.signin(session, body)
     if dto == None:
         raise HTTPException(status_code=401, detail="boo hoo")
-    return SignInResp(token=jwt.generate(dto.id, SECRET))
+    return SignInResp(id=dto.id)
 
 
 @router.get("/{id}", responses={404: {"model": Error}})
 async def get_client(
-    token: Annotated[dict, Depends(security.require_claims)],
+    id: uuid.UUID,
     session: AsyncSession = Depends(db_session),
 ) -> Client | None:
     try:
-        dto = await client.get(session, uuid.UUID(token["sub"]))
+        dto = await client.get(session, id)
         if dto is None:
             raise HTTPException(status_code=404, detail="Client not found")
         return Client(
@@ -62,6 +60,7 @@ async def get_client(
             surname=dto.surname,
             email=dto.email,
             image_url=dto.image_url,
+            tg_username=dto.tg_username,
         )
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Client not found")
@@ -69,11 +68,11 @@ async def get_client(
 
 @router.put("/{id}", responses={404: {"model": Error}})
 async def update_client(
-    token: Annotated[dict, Depends(security.require_claims)],
+    id: uuid.UUID,
     ent: UpdateClient,
     session: AsyncSession = Depends(db_session),
 ) -> Client | None:
-    dto = await client.update(session, uuid.UUID(token["sub"]), ent)
+    dto = await client.update(session, id, ent)
     if dto is None:
         raise HTTPException(status_code=404, detail="Client not found")
     return Client(
@@ -82,15 +81,16 @@ async def update_client(
         surname=dto.surname,
         email=dto.email,
         image_url=dto.image_url,
+        tg_username=dto.tg_username,
     )
 
 
-@router.delete("/", responses={204: {}, 404: {"model": Error}})
+@router.delete("/{id}", responses={204: {}, 404: {"model": Error}})
 async def delete_client(
-    token: Annotated[dict, Depends(security.require_claims)],
+    id: uuid.UUID,
     session: AsyncSession = Depends(db_session),
 ) -> Response:
-    if client.delete(session, uuid.UUID(token["sub"])):
+    if client.delete(session, id):
         return Response(status_code=204)
     else:
         raise HTTPException(status_code=404, detail="Client not found")

@@ -6,5 +6,6 @@ CREATE TABLE client (
     email VARCHAR(255) NOT NULL,
     password_hash TEXT NOT NULL,
     image_url TEXT NOT NULL,
+    tg_username TEXT NOT NULL,
     UNIQUE (email)
 );

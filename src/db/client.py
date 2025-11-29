@@ -13,9 +13,9 @@ from db import models
 
 
 CREATE_CLIENT = """-- name: create_client \\:one
-insert into client (email, password_hash, name, surname, image_url)
-values (:p1, :p2, :p3, :p4, :p5)
-returning id, name, surname, email, password_hash, image_url
+insert into client (email, password_hash, name, surname, image_url, tg_username)
+values (:p1, :p2, :p3, :p4, :p5, :p6)
+returning id, name, surname, email, password_hash, image_url, tg_username
 """
 
 
@@ -25,6 +25,7 @@ class CreateClientParams(pydantic.BaseModel):
     name: str
     surname: str
     image_url: str
+    tg_username: Optional[str]
 
 
 DELETE_CLIENT = """-- name: delete_client \\:exec
@@ -35,13 +36,13 @@ returning id
 
 
 GET_CLIENT_BY_EMAIL = """-- name: get_client_by_email \\:one
-select id, name, surname, email, password_hash, image_url from client
+select id, name, surname, email, password_hash, image_url, tg_username from client
 where email = :p1
 """
 
 
 GET_CLIENT_BY_ID = """-- name: get_client_by_id \\:one
-select id, name, surname, email, password_hash, image_url from client
+select id, name, surname, email, password_hash, image_url, tg_username from client
 where id = :p1
 """
 
@@ -51,11 +52,20 @@ update client
 set
     name   = coalesce(:p2, name),
     surname  = coalesce(:p3, surname),
-    image_url  = coalesce(:p4, image_url)
+    image_url  = coalesce(:p4, image_url),
+    tg_username  = coalesce(:p5, tg_username)
 where
     id = :p1
-returning id, name, surname, email, password_hash, image_url
+returning id, name, surname, email, password_hash, image_url, tg_username
 """
+
+
+class UpdateClientParams(pydantic.BaseModel):
+    id: uuid.UUID
+    name: Optional[str]
+    surname: Optional[str]
+    image_url: Optional[str]
+    tg_username: Optional[str]
 
 
 class Querier:
@@ -69,6 +79,7 @@ class Querier:
             "p3": arg.name,
             "p4": arg.surname,
             "p5": arg.image_url,
+            "p6": arg.tg_username,
         }).first()
         if row is None:
             return None
@@ -79,6 +90,7 @@ class Querier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
     def delete_client(self, *, id: uuid.UUID) -> None:
@@ -95,6 +107,7 @@ class Querier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
     def get_client_by_id(self, *, id: uuid.UUID) -> Optional[models.Client]:
@@ -108,14 +121,16 @@ class Querier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
-    def update_client(self, *, id: uuid.UUID, name: Optional[str], surname: Optional[str], image_url: Optional[str]) -> Optional[models.Client]:
+    def update_client(self, arg: UpdateClientParams) -> Optional[models.Client]:
         row = self._conn.execute(sqlalchemy.text(UPDATE_CLIENT), {
-            "p1": id,
-            "p2": name,
-            "p3": surname,
-            "p4": image_url,
+            "p1": arg.id,
+            "p2": arg.name,
+            "p3": arg.surname,
+            "p4": arg.image_url,
+            "p5": arg.tg_username,
         }).first()
         if row is None:
             return None
@@ -126,6 +141,7 @@ class Querier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
 
@@ -140,6 +156,7 @@ class AsyncQuerier:
             "p3": arg.name,
             "p4": arg.surname,
             "p5": arg.image_url,
+            "p6": arg.tg_username,
         })).first()
         if row is None:
             return None
@@ -150,6 +167,7 @@ class AsyncQuerier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
     async def delete_client(self, *, id: uuid.UUID) -> None:
@@ -166,6 +184,7 @@ class AsyncQuerier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
     async def get_client_by_id(self, *, id: uuid.UUID) -> Optional[models.Client]:
@@ -179,14 +198,16 @@ class AsyncQuerier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )
 
-    async def update_client(self, *, id: uuid.UUID, name: Optional[str], surname: Optional[str], image_url: Optional[str]) -> Optional[models.Client]:
+    async def update_client(self, arg: UpdateClientParams) -> Optional[models.Client]:
         row = (await self._conn.execute(sqlalchemy.text(UPDATE_CLIENT), {
-            "p1": id,
-            "p2": name,
-            "p3": surname,
-            "p4": image_url,
+            "p1": arg.id,
+            "p2": arg.name,
+            "p3": arg.surname,
+            "p4": arg.image_url,
+            "p5": arg.tg_username,
         })).first()
         if row is None:
             return None
@@ -197,4 +218,5 @@ class AsyncQuerier:
             email=row[3],
             password_hash=row[4],
             image_url=row[5],
+            tg_username=row[6],
         )

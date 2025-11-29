@@ -35,9 +35,7 @@ async def update(
 ) -> m.Client | None:
     async with conn.begin():
         q = c.AsyncQuerier(await conn.connection())
-        client = await q.update_client(
-            id=id, name=ent.name, surname=ent.surname, image_url=ent.image_url
-        )
+        client = await q.update_client(ent.to_params(id))
         return client
 
 

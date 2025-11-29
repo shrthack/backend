@@ -4,5 +4,5 @@ CREATE TABLE merch (
     name VARCHAR(255) NOT NULL,
     info TEXT NOT NULL,
     image_url TEXT NOT NULL,
-    points_needed INT NOT NULL,
+    points_needed INT NOT NULL
 );

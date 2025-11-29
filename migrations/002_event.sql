@@ -4,5 +4,5 @@ CREATE TABLE event (
     name VARCHAR(255) NOT NULL,
     info TEXT NOT NULL,
     image_url TEXT NOT NULL,
-    points INT NOT NULL,
+    points INT NOT NULL
 );

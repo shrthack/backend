@@ -2,7 +2,14 @@
 # versions:
 #   sqlc v1.28.0
 import pydantic
+from typing import Optional
 import uuid
+
+
+class ActiveEvent(pydantic.BaseModel):
+    user_id: uuid.UUID
+    event_id: uuid.UUID
+    total_points: int
 
 
 class Client(pydantic.BaseModel):
@@ -12,3 +19,20 @@ class Client(pydantic.BaseModel):
     email: str
     password_hash: str
     image_url: str
+    tg_username: Optional[str]
+
+
+class Event(pydantic.BaseModel):
+    id: uuid.UUID
+    name: str
+    info: str
+    image_url: str
+    points: int
+
+
+class Merch(pydantic.BaseModel):
+    id: uuid.UUID
+    name: str
+    info: str
+    image_url: str
+    points_needed: int
