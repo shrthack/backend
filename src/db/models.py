@@ -2,7 +2,6 @@
 # versions:
 #   sqlc v1.28.0
 import pydantic
-from typing import Optional
 import uuid
 
 
@@ -19,7 +18,7 @@ class Client(pydantic.BaseModel):
     email: str
     password_hash: str
     image_url: str
-    tg_username: Optional[str]
+    tg_username: str
 
 
 class Event(pydantic.BaseModel):

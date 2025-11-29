@@ -25,7 +25,7 @@ class CreateClientParams(pydantic.BaseModel):
     name: str
     surname: str
     image_url: str
-    tg_username: Optional[str]
+    tg_username: str
 
 
 DELETE_CLIENT = """-- name: delete_client \\:exec
